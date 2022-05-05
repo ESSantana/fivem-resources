@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <style>
+      html,
+      body,
+      #container {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+      }
+      #container {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+      }
+      #speedometer {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 20%;
+        height: 10%;
+        margin-left: auto;
+        border-radius: 30px;
+        color: black;
+        font-size: 5vh;
+        font-family: sans-serif;
+        font-weight: 600;
+        background-color: #dfdfdfcb;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="container">
+      <div id="speedometer"></div>
+    </div>
+    <script>
+      window.addEventListener("message", (event) => {
+        if (event.data.vehicle !== 0) {
+          document.getElementById(
+            "speedometer"
+          ).innerHTML = `${event.data.velocity} Km/h`;
+          document.getElementById("container").style.display = "flex";
+        } else {
+          document.getElementById("container").style.display = "none";
+        }
+      });
+    </script>
+  </body>
+</html>
