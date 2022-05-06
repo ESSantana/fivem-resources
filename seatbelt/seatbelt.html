@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <title>Seatbelt</title>
+  </head>
+  <body>
+    <script>
+      var audioPlayer = null;
+      window.addEventListener("message", (event) => {
+        if (event.data.transactionType == "playSound") {
+          if (audioPlayer != null) {
+            audioPlayer.pause();
+          }
+
+          audioPlayer = new Audio(event.data.transactionFile);
+          audioPlayer.volume = event.data.transactionVolume;
+          audioPlayer.play();
+        }
+      });
+    </script>
+  </body>
+</html>

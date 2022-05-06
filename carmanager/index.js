@@ -157,5 +157,7 @@ setTick(async () => {
         vehicle,
       })
     );
+  } else {
+    SendNuiMessage({});
   }
 });

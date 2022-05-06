@@ -65,6 +65,20 @@ setTick(async () => {
     emit("chat:addMessage", {
       args: [`Sinto colocado: ${beltOn}`],
     });
+    if (beltOn) emit("seatbelt:sounds", "buckle", 100);
+    else emit("seatbelt:sounds", "unbuckle", 100);
+
     await delay(500);
   }
+});
+
+on("seatbelt:sounds", (soundFile, soundVolume) => {
+  const path = "./sounds/" + soundFile + ".ogg";
+  const transactionType = "playSound";
+  console.log({ path, transactionType, soundVolume });
+  SendNuiMessage({
+    transactionType,
+    transactionFile: path,
+    transactionVolume: soundVolume,
+  });
 });
