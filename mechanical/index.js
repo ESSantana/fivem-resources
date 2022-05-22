@@ -1,36 +1,22 @@
 const CANT_REPAIR_MSG = "Não é possível reparar o veículo por dentro";
 const CANT_BODYKIT_MSG =
-  "Não é possível arrumar a funilaria do veículo por dentro";
+  "Não é possível arrumar a lataria do veículo por dentro";
 const CANT_HEALTHCHECK_MSG =
   "Não é possível verificar os status do veículo fora dele";
 
-const delay = async (timer) =>
-  await new Promise((res, rej) => setTimeout(res, timer));
+const delay = exports.utils.delay;
+const getNearestVehicle = exports.utils.nearestVehicle;
 
-const getNearestVehicle = () => {
+const playAnim = async (anim, duration) => {
   const ped = PlayerPedId();
-
-  let vehicle = GetVehiclePedIsIn(ped, false);
-
-  if (vehicle) {
-    return { vehicle, isInVehicle: true };
-  }
-
-  const coords = GetEntityCoords(ped);
-  vehicle = GetClosestVehicle(
-    coords[0],
-    coords[1],
-    coords[2],
-    10,
-    0,
-    00000000000000100
-  );
-  return { vehicle, isInVehicle: false };
+  TaskStartScenarioInPlace(ped, anim, 0, true);
+  await delay(duration);
+  ClearPedTasks(ped);
 };
 
 RegisterCommand(
   "repair",
-  async (source, args, raw) => {
+  async (_X, _Y, _Z) => {
     const { vehicle, isInVehicle } = getNearestVehicle();
     if (isInVehicle) {
       emit("chat:addMessage", {
@@ -38,10 +24,7 @@ RegisterCommand(
       });
       return;
     }
-    const ped = PlayerPedId();
-    TaskStartScenarioInPlace(ped, "PROP_HUMAN_BUM_BIN", 0, true);
-    await delay(15000);
-    ClearPedTasks(ped);
+    await playAnim("PROP_HUMAN_BUM_BIN", 15000);
     SetVehicleEngineHealth(vehicle, 1000);
   },
   false
@@ -49,7 +32,7 @@ RegisterCommand(
 
 RegisterCommand(
   "bodykit",
-  (source, args, raw) => {
+  async (_X, _Y, _Z) => {
     const { vehicle, isInVehicle } = getNearestVehicle();
     if (isInVehicle) {
       emit("chat:addMessage", {
@@ -57,6 +40,7 @@ RegisterCommand(
       });
       return;
     }
+    await playAnim("WORLD_HUMAN_WELDING", 15000);
     currentEngineHealht = GetVehicleEngineHealth(vehicle);
     SetVehicleFixed(vehicle);
     SetVehicleEngineHealth(vehicle, currentEngineHealht);
@@ -66,11 +50,14 @@ RegisterCommand(
 
 RegisterCommand(
   "health",
-  (source, args, raw) => {
+  (_X, _Y, _Z) => {
     const { vehicle, isInVehicle } = getNearestVehicle();
     if (isInVehicle) {
-      console.log("Body: ", GetVehicleBodyHealth(vehicle));
-      console.log("Engine: ", GetVehicleEngineHealth(vehicle));
+      const bodyHealth = Math.floor(GetVehicleBodyHealth(vehicle));
+      const engineHealth = Math.floor(GetVehicleEngineHealth(vehicle));
+      emit("chat:addMessage", {
+        args: [`Body: ${bodyHealth} / Engine: ${engineHealth}`],
+      });
     } else {
       emit("chat:addMessage", {
         args: [CANT_HEALTHCHECK_MSG],
@@ -79,3 +66,23 @@ RegisterCommand(
   },
   false
 );
+
+// const dict = "amb@world_human_welding@male@base";
+//       RequestAnimDict(dict);
+//       while (HasAnimDictLoaded(dict) != 1) {
+//         await delay(0);
+//       }
+//       const ped = PlayerPedId();
+//       TaskPlayAnim(
+//         ped,
+//         dict,
+//         "base",
+//         8.0,
+//         8.0,
+//         -1,
+//         1,
+//         1,
+//         false,
+//         false,
+//         false
+//       );

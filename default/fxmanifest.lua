@@ -9,3 +9,7 @@ version '1.0.0'
 resource_type "gametype" { name = "Default game type" }
 
 client_scripts { 'index.js' }
+
+dependencies {
+  "utils"
+}

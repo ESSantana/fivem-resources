@@ -1,46 +1,29 @@
 const availableDoors = [0, 1, 2, 3];
 
-const delay = async (timer) =>
-  await new Promise((res, rej) => setTimeout(res, timer));
-
-const getNearestVehicle = () => {
-  const ped = PlayerPedId();
-  let vehicle = GetVehiclePedIsIn(ped, false);
-
-  if (vehicle) {
-    return { vehicle, isInVehicle: true };
-  }
-  const coords = GetEntityCoords(ped);
-
-  vehicle = GetClosestVehicle(
-    coords[0],
-    coords[1],
-    coords[2],
-    10,
-    0,
-    00000000000000100
-  );
-  return { vehicle, isInVehicle: false };
-};
+const delay = exports.utils.delay;
+const keys = exports.utils.keymapping;
+const nearestVehicle = exports.utils.nearestVehicle;
 
 const toogleDoor = (vehicle, currentDoor) => {
   const isDoorOpen = GetVehicleDoorAngleRatio(vehicle, currentDoor) !== 0;
 
-  if (isDoorOpen) {
-    SetVehicleDoorShut(vehicle, currentDoor, false, false);
-  } else {
-    SetVehicleDoorOpen(vehicle, currentDoor, false, false);
-  }
+  const doorOpenMap = {
+    true: () => SetVehicleDoorShut(vehicle, currentDoor, false, false),
+    false: () => SetVehicleDoorOpen(vehicle, currentDoor, false, false),
+  };
+  doorOpenMap[isDoorOpen]();
 };
 
 const toogleLock = (vehicle) => {
   const isDoorLocked = GetVehicleDoorLockStatus(vehicle) > 1;
 
-  if (isDoorLocked) {
-    SetVehicleDoorsLocked(vehicle, 1);
-  } else {
-    SetVehicleDoorsLocked(vehicle, 2);
-  }
+  const DoorLockMap = {
+    true: 1,
+    false: 2,
+  };
+
+  SetVehicleDoorsLocked(vehicle, DoorLockMap[isDoorLocked]);
+  return !isDoorLocked;
 };
 
 const toogleEngine = (vehicle) => {
@@ -49,42 +32,42 @@ const toogleEngine = (vehicle) => {
 
 RegisterCommand(
   "p",
-  async (source, args, raw) => {
+  async (_X, args, _Z) => {
     if (args.length < 1) {
       emit("chat:addMessage", {
         args: ["Nenhuma porta especificada"],
       });
+      return;
     }
 
     const currentDoor = parseInt(args[0]) - 1;
-
     const isValidDoor = availableDoors.includes(currentDoor);
-
     if (!isValidDoor) {
       emit("chat:addMessage", {
         args: ["Porta inexistente"],
       });
-    } else {
-      const { vehicle } = getNearestVehicle();
-      toogleDoor(vehicle, currentDoor);
+      return;
     }
+
+    const { vehicle } = nearestVehicle();
+    toogleDoor(vehicle, currentDoor);
   },
   false
 );
 
 RegisterCommand(
-  "portaMalas",
-  async (source, args, raw) => {
-    const { vehicle } = getNearestVehicle();
+  "door5",
+  async (_X, _Y, _Z) => {
+    const { vehicle } = nearestVehicle();
     toogleDoor(vehicle, 5);
   },
   false
 );
 
 RegisterCommand(
-  "capo",
-  async (source, args, raw) => {
-    const { vehicle } = getNearestVehicle();
+  "hood",
+  async (_X, _Y, _Z) => {
+    const { vehicle } = nearestVehicle();
     toogleDoor(vehicle, 4);
   },
   false
@@ -92,8 +75,8 @@ RegisterCommand(
 
 RegisterCommand(
   "showOff",
-  async (source, args, raw) => {
-    const { vehicle } = getNearestVehicle();
+  async (_X, _Y, _Z) => {
+    const { vehicle } = nearestVehicle();
 
     for (let index = 0; index < 10; index++) {
       toogleDoor(vehicle, index);
@@ -104,8 +87,10 @@ RegisterCommand(
 
 setTick(async () => {
   await delay(10);
-  const { vehicle, isInVehicle } = getNearestVehicle();
-  if (IsControlPressed(0, 7)) {
+  const { vehicle, isInVehicle } = nearestVehicle();
+  if (IsControlPressed(0, keys("L"))) {
+    const lockStatus = toogleLock(vehicle);
+
     if (!isInVehicle) {
       const dict = "anim@mp_player_intmenu@key_fob@";
       RequestAnimDict(dict);
@@ -129,23 +114,29 @@ setTick(async () => {
       await delay(800);
       ClearPedTasks(ped);
     }
-    toogleLock(vehicle);
+    await delay(800);
+    SendNuiMessage(
+      JSON.stringify({
+        transactionType: "playSound",
+        transactionFile: "./sounds/car_lock.ogg",
+        transactionVolume: 0.2,
+        lockStatus,
+      })
+    );
     SetVehicleAlarm(vehicle, true);
   }
 });
 
 setTick(async () => {
-  const { vehicle, isInVehicle } = getNearestVehicle();
-  if (IsControlJustPressed(0, 29) && isInVehicle) {
+  const { vehicle, isInVehicle } = nearestVehicle();
+  if (IsControlJustPressed(0, keys("B")) && isInVehicle) {
     await delay(100);
     toogleEngine(vehicle);
   }
 });
 
-// Speedometer
 setTick(async () => {
   await delay(0);
-
   const ped = PlayerPedId();
   const vehicle = GetVehiclePedIsIn(ped, false);
   if (vehicle != 0) {
@@ -158,6 +149,14 @@ setTick(async () => {
       })
     );
   } else {
-    SendNuiMessage({});
+    SendNuiMessage(JSON.stringify({ hideHUD: true }));
   }
+});
+
+on("hud:seatbelt", (status) => {
+  SendNuiMessage(
+    JSON.stringify({
+      beltStatus: status,
+    })
+  );
 });

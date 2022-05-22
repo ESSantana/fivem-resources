@@ -1,25 +1,21 @@
 const spanwPos = [183.758, -1010.259, 29.322];
 const defaultValue = 0.0;
 
-const Delay = async (timer) =>
-  new Promise((res, rej) => setTimeout(res(), timer));
+const delay = exports.utils.delay;
 
 setTick(async () => {
-  await Delay(0);
-  const player = PlayerId();
-  if (GetPlayerWantedLevel(player) > 0) {
-    SetPlayerWantedLevel(player, 0, false);
-    SetPlayerWantedLevelNow(player, false);
-  }
-});
-
-setTick(async () => {
-  await Delay(0);
+  await delay(0);
   SetVehicleDensityMultiplierThisFrame(defaultValue);
   SetRandomVehicleDensityMultiplierThisFrame(defaultValue);
   SetParkedVehicleDensityMultiplierThisFrame(defaultValue);
   SetPedDensityMultiplierThisFrame(defaultValue);
   SetScenarioPedDensityMultiplierThisFrame(defaultValue, defaultValue);
+
+  const player = PlayerId();
+  if (GetPlayerWantedLevel(player) > 0) {
+    SetPlayerWantedLevel(player, 0, false);
+    SetPlayerWantedLevelNow(player, false);
+  }
 });
 
 on("onClientGameTypeStart", () => {
@@ -45,7 +41,7 @@ on("onClientGameTypeStart", () => {
 
 RegisterCommand(
   "initLoc",
-  async (source, args, raw) => {
+  async (_X, _Y, _Z) => {
     const ped = PlayerPedId();
     SetEntityCoords(ped, spanwPos[0], spanwPos[1], spanwPos[2]);
   },

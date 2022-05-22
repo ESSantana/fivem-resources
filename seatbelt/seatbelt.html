@@ -6,15 +6,14 @@
   <body>
     <script>
       var audioPlayer = null;
-      window.addEventListener("message", (event) => {
+      window.addEventListener("message", async (event) => {
         if (event.data.transactionType == "playSound") {
           if (audioPlayer != null) {
             audioPlayer.pause();
           }
-
           audioPlayer = new Audio(event.data.transactionFile);
           audioPlayer.volume = event.data.transactionVolume;
-          audioPlayer.play();
+          await audioPlayer.play();
         }
       });
     </script>

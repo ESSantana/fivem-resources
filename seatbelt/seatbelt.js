@@ -1,5 +1,6 @@
-const delay = async (timer) =>
-  new Promise((res, rej) => setTimeout(res, timer));
+const delay = exports.utils.delay;
+const getNearestVehicle = exports.utils.nearestVehicle;
+const keys = exports.utils.keymapping;
 
 var speedBuffer = [];
 var velBuffer = [];
@@ -32,11 +33,8 @@ setTick(async () => {
       speedBuffer[2] - speedBuffer[1] > 60 &&
       !beltOn
     ) {
-      console.log("Deveria ser jogado pra fora do carro!!!");
       const co = GetEntityCoords(ped);
       const fw = Fwv(ped);
-
-      console.log(`SPEED 1: ${speedBuffer[1]} - SPEED 2: ${speedBuffer[2]}`);
 
       SetEntityCoords(
         ped,
@@ -56,29 +54,47 @@ setTick(async () => {
   }
 });
 
+let actionLock = false;
 setTick(async () => {
   const ped = PlayerPedId();
   const vehicle = GetVehiclePedIsIn(ped, false);
 
-  if (IsControlJustPressed(0, 47) && vehicle) {
+  if (IsControlJustPressed(0, keys("G")) && vehicle && !actionLock) {
+    actionLock = !actionLock;
     beltOn = !beltOn;
     emit("chat:addMessage", {
       args: [`Sinto colocado: ${beltOn}`],
     });
-    if (beltOn) emit("seatbelt:sounds", "buckle", 100);
-    else emit("seatbelt:sounds", "unbuckle", 100);
+    if (beltOn) {
+      emit("seatbelt:sounds", "buckle", 0.4);
+    } else {
+      emit("seatbelt:sounds", "unbuckle", 0.4);
+    }
+    await delay(3000);
+    emit("hud:seatbelt", beltOn);
+    actionLock = !actionLock;
+  } else if (!vehicle && beltOn) {
+    beltOn = !beltOn;
+    emit("hud:seatbelt", beltOn);
+  }
+});
 
-    await delay(500);
+setTick(async () => {
+  await delay(0);
+  if (beltOn) {
+    DisableControlAction(0, 75, true);
+    DisableControlAction(27, 75, true);
   }
 });
 
 on("seatbelt:sounds", (soundFile, soundVolume) => {
   const path = "./sounds/" + soundFile + ".ogg";
   const transactionType = "playSound";
-  console.log({ path, transactionType, soundVolume });
-  SendNuiMessage({
-    transactionType,
-    transactionFile: path,
-    transactionVolume: soundVolume,
-  });
+  SendNuiMessage(
+    JSON.stringify({
+      transactionType,
+      transactionFile: path,
+      transactionVolume: soundVolume,
+    })
+  );
 });
