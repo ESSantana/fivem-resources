@@ -44,3 +44,4 @@ const attachAndAnim = (entityToAttach, animToPlay, animVariation) => {
   StopAnimTask(player, "amb@world_human_stand_fishing@idle_a", "idle_c", 2.0);
   DeleteEntity(FishRod);
 };
+
