@@ -1,6 +1,7 @@
 <h1>Fivem Resource Scripts</h1>
 <section id="repo-objective-pt">
   <p>
+    <strong>OBS: Esse repositório é recomendado para quem já utiliza/utilizou o fivem para desenvolver scripts, pois não possui documentação de como começar, apenas de adição dos recursos a um servidor existente</strong><br>
     Esse repositório contém scripts que foram criados em live na <a href="https://www.twitch.tv/snkky_" target="_blank">Twitch</a> para o jogo GTA V, utilizando
     os recursos providos pelo <a href="https://docs.fivem.net/docs/" target="_blank">FIVEM</a> com o próposito de estudo da linguagem Javascript e um pouco
     de diversão.
